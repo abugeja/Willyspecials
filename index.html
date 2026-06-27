@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Williamstown Special Nights</title>
+<meta name="description" content="Every weeknight special across Williamstown, Newport &amp; Spotswood — steak nights, parmas, trivia, roasts, kids-eat-free and more. Mapped, rated and ranked.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,900;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<style>
+  :root{
+    /* Williamstown Seagulls brand colours — Royal Blue #0D4C92 and Gold #FEC52E.
+       --royal holds the exact blue (used for solid fills and borders on light paper).
+       --gold below holds a brightened tint of that blue, used only where small text/
+       borders need to read clearly against the dark navy background. --ember holds the
+       exact gold, used throughout as the primary "today/steak" accent. */
+    --char:#081c33;--smoke:#0d2742;--smoke-2:#123a5e;--tallow:#eef2f7;--ash:#7fa0c4;--ash-dim:#4d6b8c;
+    --ember:#FEC52E;--mr:#DA262E;--sage:#3FB88A;--gold:#3D8BFF;--blue:#3D8BFF;--teal:#5fa6a0;--purple:#a884c0;
+    --royal:#0D4C92;
+    --line:rgba(254,197,46,.16);--line-2:rgba(254,197,46,.08);
+    --mono:'JetBrains Mono',ui-monospace,monospace;--body:'Hanken Grotesk',system-ui,sans-serif;--disp:'Fraunces',Georgia,serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--char);color:var(--tallow);font-family:var(--body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+  a{color:inherit}
+
+  /* HERO */
+  .hero{position:relative;padding:64px 0 30px;overflow:hidden;
+    background:linear-gradient(160deg,#061830 0%,#0d4c92 48%,#0a2c54 100%)}
+  .sash{position:absolute;top:-25%;right:-14%;width:46%;height:170%;z-index:0;pointer-events:none;
+    background:linear-gradient(100deg,#FEC52E,#FFD968 55%,#FEC52E);
+    transform:rotate(20deg);opacity:.92;box-shadow:0 0 90px rgba(254,197,46,.35)}
+  .coals{position:absolute;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(90% 70% at 8% 115%,rgba(254,197,46,.22),transparent 55%)}
+  @media (prefers-reduced-motion: no-preference){.coals{animation:flick 7s ease-in-out infinite alternate}@keyframes flick{0%{opacity:.78}50%{opacity:1}100%{opacity:.88}}}
+  .hero .wrap{position:relative;z-index:1}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--ember);margin-bottom:14px}
+  h1{font-family:var(--disp);font-weight:900;font-size:clamp(40px,8.5vw,88px);line-height:.9;letter-spacing:-.02em;color:var(--tallow)}
+  h1 em{font-style:italic;color:var(--ember)}
+  .sub{font-family:var(--disp);font-style:italic;font-weight:500;font-size:clamp(16px,2.6vw,22px);margin-top:16px;max-width:40ch;color:var(--tallow)}
+  .stat-strip{display:flex;gap:26px;flex-wrap:wrap;margin-top:22px;font-family:var(--mono);font-size:12px;color:var(--tallow);opacity:.85}
+  .stat-strip b{color:var(--ember);font-weight:500}
+
+  /* TABS */
+  .tabs{position:sticky;top:0;z-index:500;background:rgba(8,28,51,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);margin-top:20px}
+  .tabs .wrap{display:flex;gap:4px;flex-wrap:wrap}
+  .tab{font-family:var(--mono);font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ash);background:none;border:none;
+    padding:16px 16px 13px;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .15s;flex:1 1 auto;text-align:center;border-radius:8px 8px 0 0}
+  .tab:hover{color:var(--tallow)}
+  .tab.active{color:var(--char);background:var(--ember);border-bottom-color:var(--ember);font-weight:700}
+  @media(max-width:560px){
+    .tabs .wrap{gap:0}
+    .tab{flex:1 1 33.333%;width:33.333%;padding:13px 6px 11px;font-size:11px}
+  }
+
+  .panel{display:none;padding:42px 0 60px}
+  .panel.active{display:block}
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:24px;flex-wrap:wrap}
+  h2{font-family:var(--disp);font-weight:900;font-size:clamp(26px,5vw,40px);letter-spacing:-.01em;line-height:1}
+  .sec-sub{font-family:var(--body);color:var(--ash);font-size:15px;flex-basis:100%;max-width:64ch}
+
+  /* CHIPS / CONTROLS */
+  .chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px}
+  .chip{font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ash);background:transparent;
+    border:1px solid var(--line);border-radius:20px;padding:7px 13px;cursor:pointer;transition:all .15s}
+  .chip:hover{border-color:var(--ash);color:var(--tallow)}
+  .chip.active{background:var(--ember);border-color:var(--ember);color:var(--char);font-weight:700}
+  .chip.t.active{background:var(--royal);border-color:var(--royal);color:var(--tallow)}
+
+  /* PLANNER DOCKETS */
+  .dockets{display:grid;grid-template-columns:repeat(5,1fr);gap:13px}
+  @media(max-width:860px){.dockets{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:460px){.dockets{grid-template-columns:1fr}}
+  .docket{position:relative;background:var(--tallow);color:#15263b;border-radius:4px;padding:17px 15px 15px;box-shadow:0 10px 28px rgba(0,0,0,.34);transition:transform .18s}
+  .docket::before{content:"";position:absolute;top:-7px;left:0;right:0;height:7px;background:radial-gradient(circle at 6px -1px,transparent 5px,var(--tallow) 5px) repeat-x;background-size:12px 12px}
+  .docket:hover{transform:translateY(-4px)}
+  .docket .day{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--royal);border-bottom:1px dashed rgba(21,38,59,.3);padding-bottom:8px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+  .docket .pick{font-family:var(--disp);font-weight:900;font-size:21px;line-height:1.02}
+  .docket .cut{font-family:var(--mono);font-size:12px;color:#43586e;margin-top:7px}
+  .docket .line{display:flex;justify-content:space-between;align-items:flex-end;margin-top:13px;padding-top:10px;border-top:1px solid rgba(36,26,19,.18)}
+  .docket .price{font-family:var(--disp);font-weight:900;font-size:23px}
+  .docket .sc{font-family:var(--mono);font-size:11px;font-weight:700;background:var(--royal);color:var(--tallow);padding:3px 7px;border-radius:4px}
+  .docket .alt{font-family:var(--mono);font-size:10.5px;color:#6f8298;margin-top:9px;line-height:1.4}
+  .docket.today{outline:3px solid var(--ember);outline-offset:3px}
+  .docket .ttag{font-family:var(--mono);font-size:9px;letter-spacing:.1em;background:var(--ember);color:var(--char);padding:2px 6px;border-radius:3px;font-weight:700}
+
+  .banner{background:var(--smoke);border-bottom:1px solid var(--line)}
+  .banner .wrap{display:grid;grid-template-columns:1fr 1fr;gap:30px;padding:16px 22px 18px}
+  @media(max-width:680px){.banner .wrap{grid-template-columns:1fr;gap:14px;padding:14px 22px 16px}}
+  .bhead{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ember);
+    margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--line-2);font-weight:700}
+  .bsection.tomo .bhead{color:var(--gold)}
+  .bgroup{display:flex;gap:9px;align-items:baseline;padding:3px 0;flex-wrap:wrap}
+  .bgroup .bt{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--char);
+    background:var(--ember);padding:2px 7px;border-radius:4px;flex-shrink:0;font-weight:700;white-space:nowrap}
+  .bsection.tomo .bgroup .bt{background:var(--gold);color:var(--char)}
+  .bgroup .bp{font-size:12.5px;color:var(--tallow);line-height:1.4}
+  .bnone{font-size:12.5px;color:var(--ash-dim);font-style:italic;padding:3px 0}
+  .docket.tomo{outline:2px dashed var(--royal);outline-offset:3px}
+  .ttag.tm{background:var(--royal);color:var(--tallow)}
+
+  /* TIMETABLE GRID */
+  .legend{display:flex;gap:13px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;color:var(--ash);margin-bottom:16px}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+
+  .weekstack{display:flex;flex-direction:column;gap:24px}
+  .daysection h4{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ash);
+    margin-bottom:8px;display:flex;align-items:center;gap:9px;position:sticky;top:48px;background:var(--char);padding:6px 0;z-index:1}
+  .daysection h4 .tag{font-family:var(--mono);font-size:9px;background:var(--ember);color:var(--char);padding:2px 7px;border-radius:10px;letter-spacing:.06em;font-weight:700}
+  .daysection h4 .tag.tomo{background:var(--royal);color:var(--tallow)}
+  .daysection .inner{background:var(--smoke);border:1px solid var(--line);border-radius:11px;overflow:hidden}
+  .dayrow{display:flex;align-items:flex-start;gap:11px;padding:11px 14px;border-bottom:1px solid var(--line-2)}
+  .dayrow:last-child{border-bottom:none}
+  .dayrow .em{font-size:18px;line-height:1.3;flex-shrink:0}
+  .dayrow .body{flex:1;min-width:0}
+  .dayrow .vn{font-family:var(--disp);font-weight:900;font-size:15px;line-height:1.2}
+  .dayrow .vn .ar{font-family:var(--mono);font-weight:400;font-size:10px;color:var(--ash);margin-left:6px;text-transform:uppercase;letter-spacing:.02em}
+  .dayrow .tx{font-size:13px;color:var(--ash);margin-top:2px;line-height:1.4}
+  .dayrow .gr-google{flex-shrink:0;padding-top:1px}
+  .gr-google{font-family:var(--mono);font-size:10.5px;color:var(--gold)}
+
+  /* DAY CARD VIEW */
+  .daycards{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  @media(max-width:680px){.daycards{grid-template-columns:1fr}}
+  .vcard{background:var(--smoke);border:1px solid var(--line);border-radius:12px;padding:18px 18px}
+  .vcard .vh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .vcard .vn{font-family:var(--disp);font-weight:900;font-size:20px;line-height:1.02}
+  .vcard .va{font-family:var(--mono);font-size:10.5px;color:var(--ash);margin-top:3px;text-transform:uppercase;letter-spacing:.05em}
+  .ratings{display:flex;gap:9px;flex-wrap:wrap;margin-top:3px}
+  .rb{font-family:var(--mono);font-size:11px;color:var(--tallow);display:inline-flex;align-items:center;gap:4px;background:var(--smoke-2);border:1px solid var(--line);border-radius:6px;padding:3px 7px}
+  .rb b{color:var(--gold);font-weight:700}
+  .rb .src{color:var(--ash-dim)}
+  .spec-list{margin-top:13px;display:flex;flex-direction:column;gap:8px}
+  .spec{display:flex;gap:10px;align-items:flex-start}
+  .spec .em{font-size:19px;line-height:1.2}
+  .spec .txt{font-size:13.5px}
+  .spec .txt b{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ember);display:block;margin-bottom:1px}
+  .spec.steak .txt b{color:var(--ember)}
+  .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:13px}
+  .tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ash);border:1px solid var(--line);border-radius:5px;padding:2px 6px}
+  .vlinks{display:flex;gap:14px;margin-top:13px;font-family:var(--mono);font-size:11px}
+  .vlinks a{color:var(--ember);text-decoration:none;border-bottom:1px solid rgba(254,197,46,.35);padding-bottom:1px}
+
+  /* STEAK TABLE */
+  .controls{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+  .sortwrap{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--ash);display:flex;align-items:center;gap:8px}
+  select{font-family:var(--mono);font-size:12px;background:var(--smoke-2);color:var(--tallow);border:1px solid var(--line);border-radius:7px;padding:8px 10px;cursor:pointer}
+  .card{background:var(--smoke);border:1px solid var(--line);border-radius:12px;overflow:hidden;max-width:100%}
+  .row{border-bottom:1px solid var(--line-2);max-width:100%}.row:last-child{border-bottom:none}
+  .row-head{display:grid;grid-template-columns:38px 1.7fr .8fr 1.5fr .7fr 84px;gap:14px;align-items:center;padding:15px 18px;cursor:pointer;transition:background .15s;overflow:hidden}
+  .row-head:hover{background:var(--smoke-2)}
+  .rank{font-family:var(--mono);font-size:13px;color:var(--ash);text-align:center}.row.top .rank{color:var(--ember);font-weight:700}
+  .pub{font-family:var(--disp);font-weight:900;font-size:18px;line-height:1.05;min-width:0;overflow-wrap:break-word}
+  .pub .flag{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--gold);border:1px solid rgba(61,139,255,.4);border-radius:4px;padding:1px 5px;margin-left:7px;white-space:nowrap}
+  .night{font-family:var(--mono);font-size:12px;color:var(--ember);text-transform:uppercase}
+  .cutcell{font-size:13px;min-width:0;overflow-wrap:break-word}.cutcell small{color:var(--ash)}
+  .pricecell{font-family:var(--disp);font-weight:900;font-size:15px;color:var(--char);background:var(--ember);
+    padding:4px 11px;border-radius:7px;white-space:nowrap;width:fit-content;line-height:1.15}
+  .scorecell{text-align:right}.score-n{font-family:var(--mono);font-weight:700;font-size:18px}
+  .gauge{height:4px;border-radius:3px;background:var(--line);margin-top:5px;overflow:hidden}.gauge i{display:block;height:100%;background:linear-gradient(90deg,var(--mr),var(--ember),var(--gold))}
+  @media(max-width:760px){.row-head{grid-template-columns:24px 1fr 70px;grid-template-areas:"r p pr" "r n s" "r c s";row-gap:5px;padding:13px 14px}.rank{grid-area:r}.pub{grid-area:p;font-size:16px;min-width:0}.night{grid-area:n}.cutcell{grid-area:c}.pricecell{grid-area:pr;justify-self:end;font-size:13.5px;padding:3px 9px}.scorecell{grid-area:s}}
+  @media(max-width:380px){.row-head{padding:11px 12px;gap:9px}.pub{font-size:14.5px}.score-n{font-size:16px}.pricecell{font-size:12px;padding:2px 6px}}
+  .detail{max-height:0;overflow:hidden;transition:max-height .3s ease;background:var(--char)}
+  .row.open .detail{max-height:520px}
+  .detail-in{padding:6px 18px 22px;display:grid;grid-template-columns:1.1fr 1fr;gap:24px}
+  @media(max-width:680px){.detail-in{grid-template-columns:1fr;gap:16px}}
+  .bars{display:flex;flex-direction:column;gap:8px}
+  .bar-row{display:grid;grid-template-columns:90px 1fr 28px;align-items:center;gap:9px}
+  .bar-lab{font-family:var(--mono);font-size:10px;text-transform:uppercase;color:var(--ash)}
+  .bar-track{height:7px;background:var(--line);border-radius:4px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:4px;background:var(--ember);transform-origin:left;transform:scaleX(0);transition:transform .6s cubic-bezier(.2,.7,.3,1)}
+  .row.open .bar-fill{transform:scaleX(var(--v))}.bar-fill.v{background:var(--sage)}
+  .bar-num{font-family:var(--mono);font-size:11px;text-align:right}
+  .facts dt{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ash-dim);margin-top:11px}.facts dt:first-child{margin-top:0}
+  .facts dd{font-size:13px;margin-top:2px;line-height:1.4}
+  .tier{font-family:var(--mono);font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ember);margin-bottom:11px;font-weight:700}
+  .miss{margin-top:20px;background:var(--smoke);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:10px;padding:16px 18px;font-size:14px;color:var(--ash)}
+  .miss b{color:var(--tallow)}
+
+  /* RUBRIC + VERDICT */
+  .rubric{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin-top:14px}
+  @media(max-width:760px){.rubric{grid-template-columns:repeat(2,1fr)}}@media(max-width:440px){.rubric{grid-template-columns:1fr}}
+  .crit{background:var(--smoke);border:1px solid var(--line);border-radius:10px;padding:16px 15px}
+  .crit .w{font-family:var(--disp);font-weight:900;font-size:32px;color:var(--ember);line-height:1}
+  .crit .nm{font-family:var(--mono);font-size:11.5px;text-transform:uppercase;margin:9px 0 6px}
+  .crit .ds{font-size:12px;color:var(--ash);line-height:1.4}
+  .verdict{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:14px}
+  @media(max-width:680px){.verdict{grid-template-columns:1fr}}
+  .vc{background:var(--smoke);border:1px solid var(--line);border-left:3px solid var(--ember);border-radius:10px;padding:18px}
+  .vc.sage{border-left-color:var(--sage)}.vc.gold{border-left-color:var(--gold)}.vc.mr{border-left-color:var(--mr)}
+  .vc h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ash);margin-bottom:8px;font-weight:700}
+  .vc .big{font-family:var(--disp);font-weight:900;font-size:20px;line-height:1.05;margin-bottom:7px}
+  .vc p{font-size:13.5px;color:var(--ash);line-height:1.45}.vc p b{color:var(--tallow);font-weight:600}
+
+  /* MAP — real Leaflet + OpenStreetMap tiles, dark-filtered to match the theme */
+  .mapstatus{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:11.5px;color:var(--ash);
+    border:1px solid var(--line);border-radius:30px;padding:7px 8px 7px 14px;margin-bottom:16px}
+  .mapstatus .dot{width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold)}
+  @media (prefers-reduced-motion: no-preference){.mapstatus.loading .dot{animation:pulse 1.1s ease-in-out infinite}}
+  .mapstatus.ok .dot{background:var(--sage);box-shadow:0 0 8px var(--sage);animation:none}
+  .mapstatus.bad .dot{background:var(--mr);box-shadow:0 0 8px var(--mr);animation:none}
+  .mapstatus button{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--char);
+    background:var(--ember);border:none;border-radius:18px;padding:5px 11px;cursor:pointer}
+  .mapstatus button:hover{filter:brightness(1.08)}
+
+  #map{position:relative;height:560px;border-radius:14px;border:1px solid var(--line);overflow:hidden;background:#1b1512}
+  #map .leaflet-tile-pane{filter:brightness(.62) contrast(1.12) saturate(.45) invert(91%) hue-rotate(180deg)}
+  #map .leaflet-control-zoom a{background:var(--smoke-2);color:var(--tallow);border-color:var(--line)!important}
+  #map .leaflet-control-zoom a:hover{background:var(--smoke)}
+  #map .leaflet-control-attribution{background:rgba(23,18,15,.7);color:var(--ash-dim)}
+  #map .leaflet-control-attribution a{color:var(--ash)}
+  .leaflet-popup-content-wrapper{background:var(--smoke-2);color:var(--tallow);border-radius:11px}
+  .leaflet-popup-tip{background:var(--smoke-2)}
+  .leaflet-popup-content{margin:13px 15px;font-family:var(--body);width:auto!important;min-width:220px}
+  .leaflet-popup-close-button{color:var(--ash)!important}
+  .pop .pn{font-family:var(--disp);font-weight:900;font-size:17px;line-height:1.05}
+  .pop .pa{font-family:var(--mono);font-size:10px;color:var(--ash);text-transform:uppercase;letter-spacing:.04em;margin:3px 0 8px}
+  .pop .pr{font-family:var(--mono);font-size:11px;color:var(--tallow);margin-bottom:9px}
+  .pop .pr b{color:var(--gold)}
+  .pop .poptt{font-size:12px;line-height:1.5;background:rgba(254,197,46,.10);border-left:2px solid var(--ember);border-radius:5px;padding:6px 9px;margin-bottom:6px}
+  .pop .poptt.tomo{background:rgba(13,76,146,.18);border-left-color:var(--royal)}
+  .pop .poptt b{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ember);margin-bottom:2px}
+  .pop .poptt.tomo b{color:var(--gold)}
+  .pop .poprest{margin-top:7px;font-size:11px}
+  .pop .poprest summary{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--ash);cursor:pointer}
+  .pop .poprest .d{font-family:var(--mono);font-size:9px;color:var(--ash-dim);text-transform:uppercase;margin-top:4px}
+  .pop .pdir{display:inline-block;margin-top:9px;font-family:var(--mono);font-size:11px;color:var(--ember);text-decoration:none;border-bottom:1px solid rgba(254,197,46,.35)}
+  .pin{position:relative;display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;
+    background:var(--tallow);border:3px solid var(--pc,var(--royal));box-shadow:0 3px 10px rgba(0,0,0,.5)}
+  .pin::after{content:"";position:absolute;left:50%;bottom:-8px;width:0;height:0;transform:translateX(-50%);
+    border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid var(--pc,var(--royal))}
+  .pin span{font-size:14px;line-height:1}
+  .pin.dim{opacity:.35}
+  .maplegend{display:flex;gap:16px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;color:var(--ash);margin-top:14px}
+  .maplegend span{display:inline-flex;align-items:center;gap:6px}
+  .maplegend i{width:9px;height:9px;border-radius:50%;display:inline-block}
+  @media(max-width:560px){#map{height:480px}}
+
+
+  footer{border-top:1px solid var(--line);padding:36px 0 54px}
+  footer p{font-family:var(--mono);font-size:11.5px;color:var(--ash-dim);line-height:1.7;max-width:78ch}
+  footer .s{color:var(--ash)}
+  :focus-visible{outline:2px solid var(--ember);outline-offset:3px;border-radius:3px}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="sash"></div>
+  <div class="coals"></div>
+  <div class="wrap">
+    <div class="eyebrow">Williamstown · Newport · Spotswood</div>
+    <h1>Special <em>Nights</em></h1>
+    <p class="sub">Every weeknight deal in the neighbourhood — steak, parmas, trivia, roasts and kids-eat-free — mapped, rated and ranked.</p>
+    <div class="stat-strip">
+      <span><b id="vcount">17</b> venues</span>
+      <span><b id="scount">40+</b> weekly specials</span>
+      <span>checked <b>27 Jun 2026</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="banner"><div class="wrap" id="bannerHost"></div></div>
+
+<nav class="tabs"><div class="wrap" id="tabnav">
+  <button class="tab active" data-tab="all">All Specials</button>
+  <button class="tab" data-tab="steak">Steak Index</button>
+  <button class="tab" data-tab="map">Map</button>
+</div></nav>
+
+<main class="wrap">
+
+  <!-- ALL SPECIALS -->
+  <section class="panel active" id="all">
+    <div class="sec-head"><h2>All specials</h2>
+      <p class="sec-sub">Every venue, every night, stacked by day. Filter by category and pubs without that special drop out entirely. Switch to a single day for the full detail, ratings and tags.</p></div>
+    <div class="chips" id="dayChips">
+      <button class="chip active" data-day="week">All days</button>
+      <button class="chip" data-day="today">★ Today</button><button class="chip" data-day="tomorrow">Tomorrow</button>
+      <button class="chip" data-day="Mon">Mon</button><button class="chip" data-day="Tue">Tue</button>
+      <button class="chip" data-day="Wed">Wed</button><button class="chip" data-day="Thu">Thu</button>
+      <button class="chip" data-day="Fri">Fri</button><button class="chip" data-day="Sat">Sat</button>
+      <button class="chip" data-day="Sun">Sun</button>
+    </div>
+    <div class="chips" id="typeChips">
+      <button class="chip t active" data-type="all">All</button>
+      <button class="chip t" data-type="steak">🥩 Steak</button><button class="chip t" data-type="parma">🍗 Parma</button>
+      <button class="chip t" data-type="trivia">🧠 Trivia</button><button class="chip t" data-type="kids">🧒 Family</button>
+      <button class="chip t" data-type="roast">🍖 Roast</button><button class="chip t" data-type="music">🎵 Music</button>
+      <button class="chip t" data-type="drinks">🍹 Drinks</button>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div id="allView"></div>
+  </section>
+
+  <!-- STEAK -->
+  <section class="panel" id="steak">
+    <div class="sec-head"><h2>Steak pick, night by night</h2>
+      <p class="sec-sub">Top-scoring steak for each weeknight. Today is stamped in gold, tomorrow outlined in blue.</p></div>
+    <div class="dockets" id="dockets"></div>
+
+    <div class="sec-head" style="margin-top:42px"><h2>Steak index</h2>
+      <p class="sec-sub">Every steak night ranked on a weighted score. Tap a row for the breakdown, the source behind the weight, and how it reviews across platforms.</p></div>
+    <div class="controls">
+      <div class="chips" id="steakChips" style="margin-bottom:0">
+        <button class="chip active" data-night="all">All</button>
+        <button class="chip" data-night="Mon">Mon</button><button class="chip" data-night="Tue">Tue</button>
+        <button class="chip" data-night="Wed">Wed</button><button class="chip" data-night="Thu">Thu</button>
+        <button class="chip" data-night="Fri">Fri</button>
+      </div>
+      <label class="sortwrap">sort
+        <select id="sort"><option value="score">score</option><option value="price">price (low→high)</option><option value="weight">weight (big→small)</option></select>
+      </label>
+    </div>
+    <div class="card" id="steakRows"></div>
+    <div class="miss" id="missBox"></div>
+
+    <div class="sec-head" style="margin-top:48px"><h2>How it's scored</h2></div>
+    <div class="rubric" id="rubric"></div>
+    <div class="sec-head" style="margin-top:48px"><h2>The verdict</h2></div>
+    <div class="verdict">
+      <div class="vc sage"><h3>Best overall &amp; value</h3><div class="big">Morning Star — Tue</div><p><b>300g sirloin, $25.</b> Biggest steak, lowest unit price, Tripadvisor #2 in Williamstown, reviews rate it the best steak night in Willy. Fully venue-confirmed.</p></div>
+      <div class="vc gold"><h3>Premium / date night</h3><div class="big">Sebastian or Porters — Thu</div><p><b>Sebastian</b> charcoal butcher's cut for two ($90), or <b>Porters</b> 200g eye fillet ($29) / 250g scotch ($35).</p></div>
+      <div class="vc"><h3>Reliable locals</h3><div class="big">Stags Head &amp; Junction — Wed</div><p><b>Stags Head</b> (250g sirloin, $25–28 +$5 wine) is closer to home; <b>Junction</b> edges it on the porterhouse but has the odd slow-service note.</p></div>
+      <div class="vc mr"><h3>Cheapest steak found</h3><div class="big">The Rose Hotel — Wed</div><p><b>$20 for a 250g porterhouse</b> — not on the original list and not yet scored, but the lowest price in the area. Tiny review base (Google 4.3 / 23), so it's a punt.</p></div>
+    </div>
+  </section>
+
+  <!-- MAP -->
+  <section class="panel" id="map-panel">
+    <div class="sec-head"><h2>The map</h2>
+      <p class="sec-sub">Real streets, real coordinates — drag to pan, pinch or scroll to zoom, just like Google Maps. Ember pins = steak night, gold = other special, grey = nothing on the selected day. Tap a pin — today's and tomorrow's specials show first.</p></div>
+    <div class="mapstatus loading" id="mapStatus"><span class="dot"></span><span class="msg">Loading map tiles…</span><button id="mapRecheck" type="button">Recheck</button></div>
+    <div class="chips" id="mapChips">
+      <button class="chip active" data-day="all">All week</button>
+      <button class="chip" data-day="today">★ Today</button><button class="chip" data-day="tomorrow">Tomorrow</button>
+      <button class="chip" data-day="Mon">Mon</button><button class="chip" data-day="Tue">Tue</button>
+      <button class="chip" data-day="Wed">Wed</button><button class="chip" data-day="Thu">Thu</button>
+      <button class="chip" data-day="Fri">Fri</button>
+    </div>
+    <div id="map"></div>
+    <div class="maplegend">
+      <span><i style="background:var(--ember)"></i> Steak night</span>
+      <span><i style="background:var(--royal)"></i> Other special</span>
+      <span><i style="background:var(--ash-dim)"></i> Nothing on the selected day</span>
+    </div>
+  </section>
+
+</main>
+
+<footer><div class="wrap">
+  <p><span class="s">Sources:</span> venue sites &amp; menus, OpenTable / SevenRooms, the eatdrinkcheap specials tracker, and live Google ratings + counts (pulled 27 Jun 2026), with Tripadvisor &amp; Restaurant Guru shown where available. Steak cuts/weights are venue-confirmed except Steam Packet (cut from reviews, weight unpublished), Hobsons Bay (inferred), and Pelicans Landing (neither published).</p>
+  <p style="margin-top:13px"><span class="s">Heads up:</span> specials, prices and trading days change without notice and some listings are a few months old — confirm with the venue before heading out. Public-holiday &amp; weekend surcharges apply at some pubs. Map tiles © OpenStreetMap contributors. Not affiliated with any venue.</p>
+</div></footer>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+/* ---------- category meta ---------- */
+const CAT={
+  steak:{e:'🥩',c:'var(--ember)',l:'Steak night'}, parma:{e:'🍗',c:'var(--gold)',l:'Parma'},
+  trivia:{e:'🧠',c:'var(--sage)',l:'Trivia'}, kids:{e:'🧒',c:'var(--blue)',l:'Kids eat free'},
+  family:{e:'👪',c:'var(--blue)',l:'Family deal'}, roast:{e:'🍖',c:'var(--mr)',l:'Roast'},
+  pasta:{e:'🍝',c:'var(--gold)',l:'Pasta'}, paella:{e:'🥘',c:'var(--gold)',l:'Paella'},
+  lamb:{e:'🐑',c:'var(--mr)',l:'Lamb'}, risotto:{e:'🍚',c:'var(--gold)',l:'Risotto'},
+  pie:{e:'🥧',c:'var(--gold)',l:'Pie'}, oysters:{e:'🦪',c:'var(--teal)',l:'Oysters'},
+  music:{e:'🎵',c:'var(--purple)',l:'Live music'}, karaoke:{e:'🎤',c:'var(--purple)',l:'Karaoke'},
+  bingo:{e:'🎱',c:'var(--purple)',l:'Drag bingo'}, locals:{e:'🍻',c:'var(--ash)',l:'Locals night'},
+  lunch:{e:'🍽️',c:'var(--ash)',l:'Lunch special'}, drinks:{e:'🍹',c:'var(--teal)',l:'Drinks'},
+  fishchips:{e:'🐟',c:'var(--teal)',l:'Fish & chips'}, game:{e:'🎲',c:'var(--ash)',l:'Toss the Boss'}
+};
+/* type filter groupings */
+const TYPEMAP={steak:['steak'],parma:['parma'],trivia:['trivia'],kids:['kids','family'],roast:['roast'],music:['music','karaoke','bingo'],drinks:['drinks','oysters']};
+
+/* ---------- venues ---------- */
+const V=[
+ {n:"Morning Star",area:"Williamstown",lat:-37.8642654,lng:144.8991750,
+  g:[4.4,425],ta:4.5,rg:4.3,
+  sp:{Tue:[{t:'steak',x:'300g sirloin $25, peppercorn or béarnaise'}],Thu:[{t:'locals',x:'Locals night'}],Fri:[{t:'oysters',x:'Oysters + happy hour 4–6'}],Sun:[{t:'roast',x:'Sunday roast'}]},
+  hh:"Fri 4–6: $4 pots, $8 pints", tags:["beer garden","kids sandpit","family","fireplace"],
+  steak:{cut:"Sirloin",weight:"300g",price:"$25",score:9.0,rank:1,s:{Value:10,Reviews:9,Cut:6.5,Portion:9,Confidence:10},src:"OpenTable venue listing",date:"Updated 10 Apr 2026"}},
+
+ {n:"Junction",area:"Newport",lat:-37.8432494,lng:144.8839858,
+  g:[4.4,721],ta:4.2,
+  sp:{Tue:[{t:'parma',x:'$25 parma & pot'}],Wed:[{t:'steak',x:'250g porterhouse $25'}],Fri:[{t:'lunch',x:'$20 express lunch'}],Sun:[{t:'roast',x:'$25 roast'}]},
+  hh:"Weekdays 4–6: $8 pints, wine & wings", tags:["craft beer","wine room","beer garden","closed Mon"],
+  steak:{cut:"Porterhouse",weight:"250g",price:"$25",score:7.8,rank:2,s:{Value:8,Reviews:7.5,Cut:7.5,Portion:7.5,Confidence:9},src:"Junction IG + eatdrinkcheap",date:"IG ~Nov 2024; tracker ~Apr 2026"}},
+
+ {n:"Stags Head",area:"Williamstown",lat:-37.866189,lng:144.906509,
+  g:[4.5,517],ta:4.4,rg:4.3,
+  sp:{Mon:[{t:'kids',x:'Kids eat free 5–8pm'}],Tue:[{t:'pie',x:'Pot & pie + free pot'}],Wed:[{t:'steak',x:'250g sirloin $25–28, +$5 wine'}],Thu:[{t:'parma',x:'$25 + free pot'}],Fri:[{t:'game',x:'Toss the Boss + footy raffle'}],Sun:[{t:'roast',x:'Roast + live music 3–6'}]},
+  hh:"Mon–Thu 3–6: $5 pots, $8 schooners, $12 cocktails", tags:["fireplace","beer garden","family Mon"],
+  steak:{cut:"Sirloin",weight:"250g",price:"$25–28",score:7.7,rank:3,s:{Value:7.5,Reviews:8,Cut:6.5,Portion:7.5,Confidence:9},src:"OpenTable “Steak & Grape Wed” listing",date:"Venue page ~Oct 2025"}},
+
+ {n:"The Spotswood",area:"Spotswood",lat:-37.8296707,lng:144.8865061,
+  g:[4.2,1415],ta:4.0,
+  sp:{Mon:[{t:'steak',x:'250g porterhouse $25'}],Tue:[{t:'trivia',x:'Trivia 7:30 + $23 burger'}],Wed:[{t:'parma',x:'$23, five parmas'}],Sun:[{t:'roast',x:'Sunday roast'}]},
+  hh:"Stepped 4–7: $4 / $5 / $6 drinks", tags:["beer garden","sport","near Scienceworks"],
+  steak:{cut:"Porterhouse",weight:"250g",price:"$25",score:7.6,rank:4,s:{Value:8,Reviews:7,Cut:7.5,Portion:7.5,Confidence:8},src:"eatdrinkcheap (venue-sourced)",date:"Listing ~Apr 2026"}},
+
+ {n:"Steam Packet",area:"Williamstown",lat:-37.863559,lng:144.902778,
+  g:[4.3,763],rg:4.8,
+  sp:{Mon:[{t:'parma',x:'Grass-fed parma'}],Tue:[{t:'kids',x:'Kids eat free'}],Wed:[{t:'trivia',x:'Trivia 7:30 + $19 burger'}],Thu:[{t:'steak',x:'Porterhouse $26'}],Fri:[{t:'music',x:'Live music'}],Sun:[{t:'music',x:'Sunday session'}]},
+  hh:"Daily 4–6: $5 pots, $7 wines", tags:["historic 1863","sports screens","live music"],
+  steak:{cut:"Porterhouse (grass-fed)",weight:"Not published",price:"$26",score:7.2,rank:5,s:{Value:6.5,Reviews:8.5,Cut:7.5,Portion:6.5,Confidence:6},src:"Cut from Tripadvisor reviews; weight not validated",date:"Reviews 2024–25"}},
+
+ {n:"Atomic Bar",area:"Williamstown",lat:-37.8628849,lng:144.903291,
+  g:[4.4,2194],ta:3.3,off:true,
+  sp:{Wed:[{t:'steak',x:'300g porterhouse / 250g scotch $29.90 incl. drink'}]},
+  hh:"", tags:["waterfront","outdoor","Italian"],
+  steak:{cut:"Porterhouse / Scotch",weight:"300g / 250g",price:"$29.90",score:7.1,rank:6,s:{Value:8,Reviews:4.5,Cut:8,Portion:9,Confidence:8},src:"eatdrinkcheap (venue-sourced)",date:"Listing ~May 2026",note:"Includes a pot of beer or glass of wine. Google 4.4 but Tripadvisor 3.3 — steak reviews are the weak point."}},
+
+ {n:"Porters",area:"Williamstown",lat:-37.8645017,lng:144.907919,
+  g:[4.3,284],off:true,
+  sp:{Tue:[{t:'steak',x:'200g eye fillet $29 / 250g scotch $35'}],Thu:[{t:'steak',x:'200g eye fillet $29 / 250g scotch $35'}]},
+  hh:"", tags:["modern dining","cocktails","closed Mon"],
+  steak:{cut:"Eye fillet / Scotch",weight:"200g / 250g",price:"$29 / $35",score:6.9,rank:7,s:{Value:5.5,Reviews:6.5,Cut:9,Portion:7,Confidence:9},src:"Porters venue site (What's On)",date:"Current 2026"}},
+
+ {n:"Hobsons Bay Hotel",area:"Williamstown",lat:-37.8589987,lng:144.9003257,
+  g:[4.1,975],rg:4.2,
+  sp:{Mon:[{t:'steak',x:'~250g grass-fed $25 + $10 wine'}],Tue:[{t:'parma',x:'Parma night'}],Wed:[{t:'locals',x:'Locals night'}],Sat:[{t:'oysters',x:'$2.50 oysters 12–5'}],Sun:[{t:'drinks',x:'$10 margaritas'}]},
+  hh:"Daily 4–6: $8 schooners & wines, $20 jugs", tags:["rooftop","city views","waterfront"],
+  steak:{cut:"Grass-fed (likely sirloin/rump)",weight:"~250g (inferred)",price:"$25",score:6.7,rank:8,s:{Value:7,Reviews:7,Cut:6.5,Portion:6.5,Confidence:5},src:"Venue menu PDF (à la carte cuts; special inferred)",date:"Menu dated 30 Apr 2026"}},
+
+ {n:"Sebastian",area:"Williamstown Beach",lat:-37.8679166,lng:144.893818,
+  g:[4.5,2469],rg:4.4,
+  sp:{Wed:[{t:'paella',x:'Seafood paella night'}],Thu:[{t:'steak',x:'Charcoal butcher’s cut for two, $90'}]},
+  hh:"Thu: $10 sangria, $15 cocktails", tags:["waterfront","charcoal grill","premium","closed Mon/Tue"],
+  steak:{cut:"Butcher's cut (rotating)",weight:"Varies",price:"$45pp",score:6.5,rank:9,s:{Value:4,Reviews:8,Cut:7,Portion:6,Confidence:9},src:"Sebastian SevenRooms page",date:"Current 2026",note:"$90 for two incl. Café de Paris butter, patatas bravas & cos salad."}},
+
+ {n:"Customs House",area:"Williamstown",lat:-37.863157,lng:144.903962,
+  g:[4.3,1234],ta:3.8,
+  sp:{Thu:[{t:'steak',x:'200g porterhouse $25'}],Fri:[{t:'steak',x:'200g porterhouse $25 + Fun & Frothies HH'}],Sat:[{t:'karaoke',x:'Karaoke'}]},
+  hh:"Fri 4–6: Fun & Frothies + live music 5pm", tags:["fireplace","near water","karaoke"],
+  steak:{cut:"Porterhouse",weight:"200g",price:"$25",score:6.2,rank:10,s:{Value:6.5,Reviews:6,Cut:7.5,Portion:5.5,Confidence:5},src:"eatdrinkcheap (flagged may be outdated)",date:"Listing ~Mar 2026"}},
+
+ {n:"Pelicans Landing",area:"Williamstown",lat:-37.8624306,lng:144.9055389,
+  g:[4.1,1316],ta:3.8,rg:4.1,
+  sp:{Mon:[{t:'risotto',x:'Risotto & wine'},{t:'kids',x:'Kids eat free 5.30–7'}],Tue:[{t:'steak',x:'Steak night $24'},{t:'kids',x:'Kids eat free 5.30–7'}],Wed:[{t:'pasta',x:'Pasta night'},{t:'kids',x:'Kids eat free 5.30–7'}],Thu:[{t:'parma',x:'Parma night'},{t:'kids',x:'Kids eat free 5.30–7'}],Sun:[{t:'karaoke',x:'Karaoke / live music'}]},
+  hh:"Happy hour all day, every day", tags:["waterfront","Gem Pier","family","karaoke"],
+  steak:{cut:"Not published",weight:"Not published",price:"$24",score:5.2,rank:11,s:{Value:5,Reviews:6,Cut:5,Portion:5,Confidence:4},src:"None found — no cut/weight published",date:"—"}},
+
+ {n:"Victoria Inn",area:"Williamstown",lat:-37.8566667,lng:144.897500,
+  g:[4.4,387],
+  sp:{Tue:[{t:'lamb',x:'Lamb shank night'}],Wed:[{t:'parma',x:'Parma night'}]},
+  hh:"“Happy hour all day, every day”", tags:["cosy bistro","local","roast"]},
+
+ {n:"The Rose Hotel",area:"Williamstown",lat:-37.8588919,lng:144.8991386,
+  g:[4.3,23],fnd:true,
+  sp:{Wed:[{t:'steak',x:'$20 — 250g porterhouse (cheapest found)'}],Thu:[{t:'fishchips',x:'Fish & chips lunch special'}],Fri:[{t:'music',x:'Live music (alt. karaoke)'}],Sat:[{t:'music',x:'Live music'}]},
+  hh:"Bulldogs away-game happy hours", tags:["renovated","big-screen sport","$20 parma + pot","not on original list"]},
+
+ {n:"Rose of Australia",area:"Williamstown",lat:-37.858882,lng:144.89915,
+  g:[4.2,153],fnd:true,
+  sp:{Wed:[{t:'steak',x:'Wednesday steak night'}]},
+  hh:"", tags:["bistro","beer garden","great-value parma","not on original list"]},
+
+ {n:"Royal Yacht Club (Royals)",area:"Williamstown",lat:-37.8623733,lng:144.9061889,
+  g:[4.5,213],
+  sp:{Wed:[{t:'family',x:'$20 adults / $10 kids'}]},
+  hh:"", tags:["waterfront","members' club","functions"]},
+
+ {n:"Squires Loft",area:"Williamstown",lat:-37.8586341,lng:144.8974878,
+  g:[4.5,942],
+  sp:{}, hh:"", tags:["à la carte steakhouse","no discount night","signature basting"]},
+
+ {n:"Peachy Keen",area:"Williamstown",lat:-37.8586804,lng:144.8974969,
+  g:[4.7,108],
+  sp:{Wed:[{t:'bingo',x:'Drag bingo (check socials)'}],Thu:[{t:'bingo',x:'Drag bingo (check socials)'}]},
+  hh:"Reasonable happy-hour cocktails", tags:["container cocktail bar","dog friendly","LGBTQ+","closed Mon/Tue"]}
+];
+
+const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const fullDay={Mon:"Monday",Tue:"Tuesday",Wed:"Wednesday",Thu:"Thursday",Fri:"Friday",Sat:"Saturday",Sun:"Sunday"};
+const GETDAY=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const NOW=new Date();
+const TODAY=GETDAY[NOW.getDay()];
+const TOMO=GETDAY[(NOW.getDay()+1)%7];
+const resolveDay=d=>d==='today'?TODAY:d==='tomorrow'?TOMO:d;
+
+/* counts */
+document.getElementById('vcount').textContent=V.length;
+let specCount=0;V.forEach(v=>DAYS.forEach(d=>{if(v.sp&&v.sp[d])specCount+=v.sp[d].length}));
+document.getElementById('scount').textContent=specCount;
+
+/* ---------- TABS ---------- */
+document.getElementById('tabnav').addEventListener('click',e=>{
+  const b=e.target.closest('.tab');if(!b)return;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));b.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  const id=b.dataset.tab==='map'?'map-panel':b.dataset.tab;
+  document.getElementById(id).classList.add('active');
+  if(b.dataset.tab==='map')initMap();
+  window.scrollTo({top:0,behavior:'auto'});
+});
+
+/* ---------- TODAY/TOMORROW BANNER — grouped by type, no emojis ---------- */
+const fmtShort=d=>d.toLocaleDateString('en-AU',{day:'numeric',month:'short'});
+const TODAY_SHORT=fmtShort(NOW);
+const TOMO_SHORT=fmtShort(new Date(NOW.getTime()+86400000));
+function groupByType(dayKey){
+  const groups={};
+  V.forEach(v=>{const arr=v.sp&&v.sp[dayKey];if(!arr)return;
+    arr.forEach(s=>{(groups[s.t]=groups[s.t]||[]).push(v.n);});});
+  return groups;
+}
+function bannerSection(dayKey,label,cls){
+  const groups=groupByType(dayKey);
+  const types=Object.keys(groups).sort((a,b)=>a==='steak'?-1:b==='steak'?1:CAT[a].l.localeCompare(CAT[b].l));
+  let h=`<div class="bsection ${cls}"><div class="bhead">${label}</div>`;
+  if(!types.length){h+='<div class="bnone">Nothing listed</div>';}
+  else types.forEach(t=>{h+=`<div class="bgroup"><span class="bt">${CAT[t].l}</span><span class="bp">${groups[t].join(', ')}</span></div>`;});
+  h+='</div>';
+  return h;
+}
+document.getElementById('bannerHost').innerHTML=
+  bannerSection(TODAY,`Today · ${TODAY_SHORT}`,'')+
+  bannerSection(TOMO,`Tomorrow · ${TOMO_SHORT}`,'tomo');
+
+/* ---------- STEAK PICK DOCKETS ---------- */
+const picks={Mon:{p:"The Spotswood",c:"250g porterhouse · $25",s:7.6,a:"alt — Hobsons Bay, closer in Willy"},
+ Tue:{p:"Morning Star",c:"300g sirloin · $25",s:9.0,a:"alt — Porters, premium cut"},
+ Wed:{p:"Junction",c:"250g porterhouse · $25",s:7.8,a:"alt — Stags Head, closer to home"},
+ Thu:{p:"Steam Packet",c:"porterhouse · $26",s:7.2,a:"alt — Sebastian / Porters, premium"},
+ Fri:{p:"Customs House",c:"200g porterhouse · $25",s:6.2,a:"or the Rose Hotel — $20 porterhouse"}};
+const dk=document.getElementById('dockets');
+["Mon","Tue","Wed","Thu","Fri"].forEach(d=>{
+  const p=picks[d];
+  const isT=d===TODAY, isM=d===TOMO;
+  const tag=isT?'<span class="ttag">TONIGHT</span>':isM?'<span class="ttag tm">TOMORROW</span>':'';
+  const cls=isT?' today':isM?' tomo':'';
+  const el=document.createElement('div');el.className='docket'+cls;
+  el.innerHTML=`<div class="day"><span>${fullDay[d]}</span>${tag}</div>
+    <div class="pick">${p.p}</div><div class="cut">${p.c}</div>
+    <div class="line"><span class="price">${p.c.split('· ')[1]}</span><span class="sc">${p.s.toFixed(1)}</span></div>
+    <div class="alt">${p.a}</div>`;
+  dk.appendChild(el);
+});
+
+/* ---------- ALL SPECIALS ---------- */
+const legend=document.getElementById('legend');
+['steak','parma','trivia','kids','roast','music','oysters','drinks','pie','pasta','paella','lamb','locals'].forEach(k=>{
+  const m=CAT[k];const s=document.createElement('span');s.innerHTML=`${m.e} ${m.l}`;legend.appendChild(s);});
+let curDay='week',curType='all';
+function typeMatch(t){if(curType==='all')return true;return (TYPEMAP[curType]||[curType]).includes(t);}
+const ratingsHTML=v=>{let h='';
+  if(v.g)h+=`<span class="rb"><span class="src">G</span><b>${v.g[0]}</b> <span class="src">(${v.g[1]})</span></span>`;
+  if(v.ta)h+=`<span class="rb"><span class="src">TA</span><b>${v.ta}</b></span>`;
+  if(v.rg)h+=`<span class="rb"><span class="src">RG</span><b>${v.rg}</b></span>`;
+  return h;};
+function renderAll(){
+  const host=document.getElementById('allView');
+  if(curDay==='week'){
+    const sections=[];
+    DAYS.forEach(d=>{
+      const items=[];
+      V.forEach(v=>{const arr=v.sp&&v.sp[d];if(!arr)return;arr.forEach(s=>{if(typeMatch(s.t))items.push({v,s});});});
+      if(items.length)sections.push({d,items});
+    });
+    if(!sections.length){host.innerHTML='<div class="miss">Nothing matches that filter this week.</div>';return;}
+    let h='<div class="weekstack">';
+    sections.forEach(({d,items})=>{
+      const tag=d===TODAY?'<span class="tag">Today</span>':d===TOMO?'<span class="tag tomo">Tomorrow</span>':'';
+      h+=`<div class="daysection"><h4>${fullDay[d]}${tag}</h4><div class="inner">`;
+      items.forEach(({v,s})=>{
+        const m=CAT[s.t];
+        h+=`<div class="dayrow"><span class="em">${m.e}</span><div class="body"><div class="vn">${v.n}<span class="ar">${v.area}</span></div><div class="tx">${s.x}</div></div>${v.g?`<span class="gr-google">★${v.g[0]}</span>`:''}</div>`;
+      });
+      h+='</div></div>';
+    });
+    h+='</div>';
+    host.innerHTML=h;
+  } else {
+    const list=V.filter(v=>v.sp&&v.sp[curDay]&&v.sp[curDay].some(s=>typeMatch(s.t)));
+    if(!list.length){host.innerHTML='<div class="miss">Nothing matches on '+fullDay[curDay]+' for that filter.</div>';return;}
+    let h='<div class="daycards">';
+    list.forEach(v=>{
+      const specs=v.sp[curDay].filter(s=>typeMatch(s.t)).map(s=>{const m=CAT[s.t];
+        return `<div class="spec ${s.t==='steak'?'steak':''}"><span class="em">${m.e}</span><span class="txt"><b>${m.l}</b>${s.x}</span></div>`;}).join('');
+      const tags=v.tags?v.tags.map(t=>`<span class="tag">${t}</span>`).join(''):'';
+      const dir=`https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lng}`;
+      h+=`<div class="vcard"><div class="vh"><div><div class="vn">${v.n}</div><div class="va">${v.area}</div></div></div>
+        <div class="ratings">${ratingsHTML(v)}</div>
+        <div class="spec-list">${specs}</div>
+        ${v.hh?`<div class="spec"><span class="em">🍹</span><span class="txt"><b>Happy hour</b>${v.hh}</span></div>`:''}
+        <div class="tags">${tags}</div>
+        <div class="vlinks"><a href="${dir}" target="_blank" rel="noopener">Directions →</a></div></div>`;
+    });
+    h+='</div>';host.innerHTML=h;
+  }
+}
+document.getElementById('dayChips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;
+  document.querySelectorAll('#dayChips .chip').forEach(c=>c.classList.remove('active'));b.classList.add('active');curDay=resolveDay(b.dataset.day);renderAll();});
+document.getElementById('typeChips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;
+  document.querySelectorAll('#typeChips .chip').forEach(c=>c.classList.remove('active'));b.classList.add('active');curType=b.dataset.type;renderAll();});
+renderAll();
+
+/* ---------- STEAK INDEX ---------- */
+const steaks=V.filter(v=>v.steak).map(v=>({...v.steak,n:v.n,area:v.area,nights:Object.keys(v.sp).filter(d=>v.sp[d].some(s=>s.t==='steak')),
+  rev:`G ${v.g[0]} (${v.g[1]})`+(v.ta?` · TA ${v.ta}`:'')+(v.rg?` · RG ${v.rg}`:''),fnd:v.off}));
+function tier(s){return s>=8.5?"Perfectly seared":s>=7?"Chargrilled":s>=6?"Medium":"Still pink in the middle";}
+let sNight='all',sortKey='score';
+function renderSteak(){
+  let list=steaks.filter(d=>sNight==='all'?true:d.nights.includes(sNight));
+  list.sort((a,b)=>sortKey==='score'?b.score-a.score:sortKey==='price'?(parseFloat(a.price.replace(/[^0-9.]/g,''))-parseFloat(b.price.replace(/[^0-9.]/g,''))):(parseInt(b.weight)||0)-(parseInt(a.weight)||0));
+  const host=document.getElementById('steakRows');host.innerHTML='';
+  if(!list.length){host.innerHTML='<div style="padding:24px 18px;font-family:var(--mono);font-size:13px;color:var(--ash)">No steak night that day.</div>';return;}
+  list.forEach(d=>{
+    const row=document.createElement('div');row.className='row'+(d.rank<=3?' top':'');
+    const bars=Object.entries(d.s).map(([k,v])=>`<div class="bar-row"><span class="bar-lab">${k}</span><div class="bar-track"><span class="bar-fill ${k==='Value'?'v':''}" style="--v:${v/10}"></span></div><span class="bar-num">${v}</span></div>`).join('');
+    row.innerHTML=`<div class="row-head">
+      <div class="rank">${String(d.rank).padStart(2,'0')}</div>
+      <div class="pub">${d.n}${d.fnd?' <span class="flag">NEW FIND</span>':''}</div>
+      <div class="night">${d.nights.join(' & ')}</div>
+      <div class="cutcell">${d.cut} <small>· ${d.weight}</small></div>
+      <div class="pricecell">${d.price}</div>
+      <div class="scorecell"><div class="score-n">${d.score.toFixed(1)}</div><div class="gauge"><i style="width:${d.score*10}%"></i></div></div></div>
+      <div class="detail"><div class="detail-in">
+        <div><div class="tier">${tier(d.score)} — ${d.score.toFixed(1)}/10</div><div class="bars">${bars}</div></div>
+        <dl class="facts"><dt>Cut & weight</dt><dd>${d.cut} · ${d.weight}</dd>
+        <dt>Weight validated by</dt><dd>${d.src}</dd><dt>Source date</dt><dd>${d.date}</dd>
+        <dt>Reviews</dt><dd>${d.rev}</dd>${d.note?`<dt>Note</dt><dd>${d.note}</dd>`:''}</dl></div></div>`;
+    row.querySelector('.row-head').addEventListener('click',()=>row.classList.toggle('open'));
+    host.appendChild(row);
+  });
+}
+document.getElementById('steakChips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;
+  document.querySelectorAll('#steakChips .chip').forEach(c=>c.classList.remove('active'));b.classList.add('active');sNight=b.dataset.night;renderSteak();});
+document.getElementById('sort').addEventListener('change',e=>{sortKey=e.target.value;renderSteak();});
+renderSteak();
+document.getElementById('missBox').innerHTML=`<b>Also found, not yet scored:</b> the <b>Rose Hotel</b> (Wed, $20 / 250g porterhouse — cheapest in the area) and <b>Rose of Australia</b> (Wed steak night) both turned up in reviews but weren't on your original list. <b>Squires Loft</b> is a proper à-la-carte steakhouse if you want steak any night without a special.`;
+
+/* rubric */
+[["30%","Value for money","Price vs portion and cut — $/100g and inclusions."],
+ ["30%","Overall reviews","Blended Google, Tripadvisor & Restaurant Guru, plus steak feedback."],
+ ["15%","Cut quality","Eye fillet / scotch > porterhouse > sirloin > rump > unspecified."],
+ ["15%","Portion","Gram weight of the steak."],
+ ["10%","Info confidence","How well price/cut/weight is confirmed, and how current."]].forEach(c=>{
+  const el=document.createElement('div');el.className='crit';
+  el.innerHTML=`<div class="w">${c[0]}</div><div class="nm">${c[1]}</div><div class="ds">${c[2]}</div>`;
+  document.getElementById('rubric').appendChild(el);});
+
+/* ---------- MAP — real Leaflet, OpenStreetMap tiles, true pan/zoom ---------- */
+let map,leafMarkers=[],tileLayer,curMapDay='all';
+let tileLoadCount=0,tileErrCount=0,tileCheckTimer=null,mapBuilt=false;
+
+function pinColor(v,day){
+  const has=day==='all'?(v.sp&&Object.keys(v.sp).length):(v.sp&&v.sp[day]);
+  if(!has)return 'var(--ash-dim)';
+  const isSteak=day==='all'?Object.values(v.sp||{}).some(a=>a.some(s=>s.t==='steak')):(v.sp[day]&&v.sp[day].some(s=>s.t==='steak'));
+  return isSteak?'var(--ember)':'var(--royal)';
+}
+function topEmoji(v,day){
+  let arr=[];if(day==='all'){Object.values(v.sp||{}).forEach(a=>arr.push(...a));}else if(v.sp&&v.sp[day])arr=v.sp[day];
+  if(!arr.length)return '·';const st=arr.find(s=>s.t==='steak');return CAT[(st||arr[0]).t].e;
+}
+function popHTML(v){
+  const today=(v.sp&&v.sp[TODAY])||[], tomo=(v.sp&&v.sp[TOMO])||[];
+  const line=arr=>arr.length?arr.map(s=>`${CAT[s.t].e} ${s.x}`).join('<br>'):'<span style="color:var(--ash-dim)">nothing listed</span>';
+  const restDays=DAYS.filter(d=>d!==TODAY&&d!==TOMO&&v.sp&&v.sp[d]);
+  const rest=restDays.map(d=>v.sp[d].map(s=>`<div><span class="d">${d}</span> ${CAT[s.t].e} ${s.x}</div>`).join('')).join('');
+  let r='';if(v.g)r+=`G <b>${v.g[0]}</b> (${v.g[1]})`;if(v.ta)r+=` · TA <b>${v.ta}</b>`;if(v.rg)r+=` · RG <b>${v.rg}</b>`;
+  const dir=`https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lng}`;
+  return `<div class="pop"><div class="pn">${v.n}</div><div class="pa">${v.area}</div>
+    <div class="pr">${r}</div>
+    <div class="poptt"><b>Today · ${fullDay[TODAY]}</b>${line(today)}</div>
+    <div class="poptt tomo"><b>Tomorrow · ${fullDay[TOMO]}</b>${line(tomo)}</div>
+    ${rest?`<details class="poprest"><summary>Rest of the week</summary>${rest}</details>`:''}
+    <a class="pdir" href="${dir}" target="_blank" rel="noopener">Directions →</a></div>`;
+}
+function drawMarkers(day){
+  leafMarkers.forEach(m=>map.removeLayer(m));leafMarkers=[];
+  V.forEach(v=>{
+    const col=pinColor(v,day);
+    const dim=day!=='all'&&!(v.sp&&v.sp[day]);
+    const icon=L.divIcon({className:'',html:`<div class="pin${dim?' dim':''}" style="--pc:${col}"><span>${topEmoji(v,day)}</span></div>`,iconSize:[32,40],iconAnchor:[16,38],popupAnchor:[0,-36]});
+    const mk=L.marker([v.lat,v.lng],{icon}).addTo(map).bindPopup(popHTML(v));
+    leafMarkers.push(mk);
+  });
+}
+function setStatus(state,msg){
+  const el=document.getElementById('mapStatus');
+  el.classList.remove('ok','bad','loading');el.classList.add(state);
+  el.querySelector('.msg').textContent=msg;
+}
+function renderMapFallback(reason){
+  const host=document.getElementById('map');
+  host.style.height='auto';
+  setStatus('bad',`Live tiles unavailable (${reason}) — showing a venue list instead`);
+  let h='<div class="daycards">';
+  V.forEach(v=>{
+    const today=(v.sp&&v.sp[TODAY])||[],tomo=(v.sp&&v.sp[TOMO])||[];
+    const line=arr=>arr.length?arr.map(s=>`${CAT[s.t].e} ${s.x}`).join('<br>'):'<span style="color:var(--ash-dim)">nothing listed</span>';
+    const dir=`https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lng}`;
+    let r='';if(v.g)r+=`G <b>${v.g[0]}</b> (${v.g[1]})`;if(v.ta)r+=` · TA <b>${v.ta}</b>`;
+    h+=`<div class="vcard"><div class="vh"><div><div class="vn">${v.n}</div><div class="va">${v.area}</div></div></div>
+      <div class="ratings"><span class="rb">${r}</span></div>
+      <div class="spec-list">
+        <div class="spec"><span class="em">📍</span><span class="txt"><b>Today</b>${line(today)}</span></div>
+        <div class="spec"><span class="em">📍</span><span class="txt"><b>Tomorrow</b>${line(tomo)}</span></div>
+      </div>
+      <div class="vlinks"><a href="${dir}" target="_blank" rel="noopener">Directions →</a></div></div>`;
+  });
+  h+='</div>';
+  host.innerHTML=h;
+}
+function buildMap(){
+  const host=document.getElementById('map');
+  host.innerHTML='';host.style.height='';
+  if(typeof L==='undefined'){renderMapFallback('map library blocked');return;}
+  tileLoadCount=0;tileErrCount=0;
+  map=L.map('map',{scrollWheelZoom:true}).setView([-37.858,144.900],14);
+  tileLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    subdomains:'abc',maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
+  tileLayer.on('tileload',()=>{tileLoadCount++;if(tileLoadCount===1){clearTimeout(tileCheckTimer);setStatus('ok',`Live map · ${V.length} venues — drag to pan, scroll/pinch to zoom`);}});
+  tileLayer.on('tileerror',()=>{tileErrCount++;});
+  drawMarkers(curMapDay);
+  const bounds=L.latLngBounds(V.map(v=>[v.lat,v.lng]));
+  map.fitBounds(bounds,{padding:[34,34]});
+  requestAnimationFrame(()=>requestAnimationFrame(()=>map.invalidateSize()));
+  setTimeout(()=>map.invalidateSize(),300);
+  mapBuilt=true;
+  tileCheckTimer=setTimeout(()=>{
+    if(tileLoadCount===0)renderMapFallback(tileErrCount>0?'tile requests blocked':'tiles timed out');
+  },6000);
+}
+function initMap(){
+  if(mapBuilt&&map){map.invalidateSize();return;}
+  buildMap();
+}
+document.getElementById('mapChips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;
+  document.querySelectorAll('#mapChips .chip').forEach(c=>c.classList.remove('active'));b.classList.add('active');
+  curMapDay=resolveDay(b.dataset.day);if(map)drawMarkers(curMapDay);});
+document.getElementById('mapRecheck').addEventListener('click',()=>{
+  setStatus('loading','Rechecking…');
+  if(map){map.remove();map=null;}
+  mapBuilt=false;
+  setTimeout(buildMap,150);
+});
+</script>
+</body>
+</html>

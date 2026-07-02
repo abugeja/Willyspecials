@@ -380,7 +380,7 @@ const TYPEMAP={steak:['steak'],parma:['parma'],trivia:['trivia'],kids:['kids','f
 const V=[
  {n:"Morning Star",area:"Williamstown",lat:-37.8642654,lng:144.8991750,
   g:[4.4,425],ta:4.5,rg:4.3,
-  sp:{Tue:[{t:'steak',x:'300g sirloin $25, peppercorn or béarnaise'}],Thu:[{t:'locals',x:'Locals night'}],Fri:[{t:'oysters',x:'Oysters + happy hour 4–6'}],Sun:[{t:'roast',x:'Sunday roast'}]},
+  sp:{Tue:[{t:'steak',x:'300g sirloin $25, peppercorn or béarnaise'}],Thu:[{t:'locals',x:'Locals night'}],Fri:[{t:'oysters',x:'Dozen oysters + bottle of Prosecco $70 (or $30 glass & half dozen), 4–6'}],Sun:[{t:'roast',x:'Sunday roast $20 (with a pot or glass of wine)'}]},
   hh:"Fri 4–6: $4 pots, $8 pints", tags:["beer garden","kids sandpit","family","fireplace"],
   steak:{cut:"Sirloin",weight:"300g",price:"$25",score:9.0,rank:1,s:{Value:10,Reviews:9,Cut:6.5,Portion:9,Confidence:10},src:"OpenTable venue listing",date:"Updated 10 Apr 2026"}},
 
@@ -398,13 +398,13 @@ const V=[
 
  {n:"The Spotswood",area:"Spotswood",lat:-37.8296707,lng:144.8865061,
   g:[4.2,1415],ta:4.0,
-  sp:{Mon:[{t:'steak',x:'250g porterhouse $25'}],Tue:[{t:'trivia',x:'Trivia 7:30 + $23 burger'}],Wed:[{t:'parma',x:'$23, five parmas'}],Sun:[{t:'roast',x:'Sunday roast'}]},
+  sp:{Mon:[{t:'steak',x:'250g porterhouse $25'}],Tue:[{t:'trivia',x:'Trivia 7:30 + $23 burger'}],Wed:[{t:'parma',x:'$23, five parmas'}],Sun:[{t:'roast',x:'Sunday roast $10'}]},
   hh:"Stepped 4–7: $4 / $5 / $6 drinks", tags:["beer garden","sport","near Scienceworks"],
   steak:{cut:"Porterhouse",weight:"250g",price:"$25",score:7.6,rank:4,s:{Value:8,Reviews:7,Cut:7.5,Portion:7.5,Confidence:8},src:"eatdrinkcheap (venue-sourced)",date:"Listing ~Apr 2026"}},
 
  {n:"Steam Packet",area:"Williamstown",lat:-37.863559,lng:144.902778,
   g:[4.3,763],rg:4.8,
-  sp:{Mon:[{t:'parma',x:'Grass-fed parma'}],Tue:[{t:'kids',x:'Kids eat free'}],Wed:[{t:'trivia',x:'Trivia 7:30 + $19 burger'}],Thu:[{t:'steak',x:'Porterhouse $26'}],Fri:[{t:'music',x:'Live music'}],Sun:[{t:'music',x:'Sunday session'}]},
+  sp:{Mon:[{t:'parma',x:'Grass-fed parma $19'}],Tue:[{t:'kids',x:'Kids eat free'}],Wed:[{t:'trivia',x:'Trivia 7:30 + $19 burger'}],Thu:[{t:'steak',x:'Porterhouse $26'}],Fri:[{t:'music',x:'Live music'}],Sun:[{t:'music',x:'Sunday session'}]},
   hh:"Daily 4–6: $5 pots, $7 wines", tags:["historic 1863","sports screens","live music"],
   steak:{cut:"Porterhouse (grass-fed)",weight:"Not published",price:"$26",score:7.2,rank:5,s:{Value:6.5,Reviews:8.5,Cut:7.5,Portion:6.5,Confidence:6},src:"Cut from Tripadvisor reviews; weight not validated",date:"Reviews 2024–25"}},
 
@@ -422,13 +422,13 @@ const V=[
 
  {n:"Hobsons Bay Hotel",area:"Williamstown",lat:-37.8589987,lng:144.9003257,
   g:[4.1,975],rg:4.2,
-  sp:{Mon:[{t:'steak',x:'~250g grass-fed $25 + $10 wine'}],Tue:[{t:'parma',x:'Parma night'}],Wed:[{t:'locals',x:'Locals night'}],Sat:[{t:'oysters',x:'$2.50 oysters 12–5'}],Sun:[{t:'drinks',x:'$10 margaritas'}]},
+  sp:{Mon:[{t:'steak',x:'~250g grass-fed $25 + $10 wine'}],Tue:[{t:'parma',x:'Parma & pot $25'}],Wed:[{t:'locals',x:'Locals night'}],Sat:[{t:'oysters',x:'$2.50 oysters 12–5'}],Sun:[{t:'drinks',x:'$10 margaritas'}]},
   hh:"Daily 4–6: $8 schooners & wines, $20 jugs", tags:["rooftop","city views","waterfront"],
   steak:{cut:"Grass-fed (likely sirloin/rump)",weight:"~250g (inferred)",price:"$25",score:6.7,rank:8,s:{Value:7,Reviews:7,Cut:6.5,Portion:6.5,Confidence:5},src:"Venue menu PDF (à la carte cuts; special inferred)",date:"Menu dated 30 Apr 2026"}},
 
  {n:"Sebastian",area:"Williamstown Beach",lat:-37.8679166,lng:144.893818,
   g:[4.5,2469],rg:4.4,
-  sp:{Wed:[{t:'paella',x:'Seafood paella night'}],Thu:[{t:'steak',x:'Charcoal butcher’s cut for two, $90'}]},
+  sp:{Wed:[{t:'paella',x:'Seafood paella to share $45'}],Thu:[{t:'steak',x:'Charcoal butcher’s cut for two, $90'}]},
   hh:"Thu: $10 sangria, $15 cocktails", tags:["waterfront","charcoal grill","premium","closed Mon/Tue"],
   steak:{cut:"Butcher's cut (rotating)",weight:"Varies",price:"$45pp",score:6.5,rank:9,s:{Value:4,Reviews:8,Cut:7,Portion:6,Confidence:9},src:"Sebastian SevenRooms page",date:"Current 2026",note:"$90 for two incl. Café de Paris butter, patatas bravas & cos salad."}},
 
@@ -440,18 +440,18 @@ const V=[
 
  {n:"Pelicans Landing",area:"Williamstown",lat:-37.8624306,lng:144.9055389,
   g:[4.1,1316],ta:3.8,rg:4.1,
-  sp:{Mon:[{t:'risotto',x:'Risotto & wine'},{t:'kids',x:'Kids eat free 5.30–7'}],Tue:[{t:'steak',x:'Steak night $24'},{t:'kids',x:'Kids eat free 5.30–7'}],Wed:[{t:'pasta',x:'Pasta night'},{t:'kids',x:'Kids eat free 5.30–7'}],Thu:[{t:'parma',x:'Parma night'},{t:'kids',x:'Kids eat free 5.30–7'}],Sun:[{t:'karaoke',x:'Karaoke / live music'}]},
+  sp:{Mon:[{t:'risotto',x:'Risotto & wine $22'},{t:'kids',x:'Kids eat free 5.30–7'}],Tue:[{t:'steak',x:'Steak night $24'},{t:'kids',x:'Kids eat free 5.30–7'}],Wed:[{t:'pasta',x:'Pasta Madness night $22'},{t:'kids',x:'Kids eat free 5.30–7'}],Thu:[{t:'parma',x:'Parma & pot $22'},{t:'kids',x:'Kids eat free 5.30–7'}],Sun:[{t:'karaoke',x:'Karaoke / live music'}]},
   hh:"Happy hour all day, every day", tags:["waterfront","Gem Pier","family","karaoke"],
   steak:{cut:"Not published",weight:"Not published",price:"$24",score:5.2,rank:11,s:{Value:5,Reviews:6,Cut:5,Portion:5,Confidence:4},src:"None found — no cut/weight published",date:"—"}},
 
  {n:"Victoria Inn",area:"Williamstown",lat:-37.8566667,lng:144.897500,
   g:[4.4,387],
-  sp:{Tue:[{t:'lamb',x:'Lamb shank night'}],Wed:[{t:'parma',x:'Parma night'}]},
+  sp:{Tue:[{t:'lamb',x:'Lamb shank night'}],Wed:[{t:'parma',x:'Parma n’ pot $18'}]},
   hh:"“Happy hour all day, every day”", tags:["cosy bistro","local","roast"]},
 
  {n:"The Rose Hotel",area:"Williamstown",lat:-37.8588919,lng:144.8991386,
   g:[4.3,23],fnd:true,
-  sp:{Wed:[{t:'steak',x:'$20 — 250g porterhouse (cheapest found)'}],Thu:[{t:'fishchips',x:'Fish & chips lunch special'}],Fri:[{t:'music',x:'Live music (alt. karaoke)'}],Sat:[{t:'music',x:'Live music'}]},
+  sp:{Wed:[{t:'steak',x:'$20 — 250g porterhouse (cheapest found)'}],Thu:[{t:'fishchips',x:'Fish & chips lunch special $17'}],Fri:[{t:'music',x:'Live music (alt. karaoke)'}],Sat:[{t:'music',x:'Live music'}]},
   hh:"Bulldogs away-game happy hours", tags:["renovated","big-screen sport","$20 parma + pot","not on original list"]},
 
  {n:"Rose of Australia",area:"Williamstown",lat:-37.858882,lng:144.89915,

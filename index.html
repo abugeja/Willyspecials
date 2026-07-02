@@ -245,6 +245,31 @@
   @media(max-width:560px){#map{height:480px}}
 
 
+  /* VENUE LINKS + GOOGLE MAPS MODAL — everything in the modal loads live from Google */
+  .vlink{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:pointer;text-align:inherit;
+    border-bottom:2px solid rgba(13,76,146,.3);transition:color .15s,border-color .15s}
+  .vlink:hover{color:var(--royal);border-bottom-color:var(--royal)}
+  .bp .vlink{border-bottom:1px solid rgba(254,197,46,.5)}
+  .bp .vlink:hover{color:var(--ember);border-bottom-color:var(--ember)}
+  .vmodal{position:fixed;inset:0;z-index:2000;display:none;align-items:center;justify-content:center;padding:18px}
+  .vmodal.open{display:flex}
+  .vmodal .backdrop{position:absolute;inset:0;background:rgba(6,24,48,.55)}
+  .vm-card{position:relative;background:var(--tallow);border-radius:16px;width:100%;max-width:680px;max-height:calc(100dvh - 36px);
+    display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 70px rgba(6,24,48,.45)}
+  .vm-head{display:flex;align-items:flex-start;gap:12px;padding:16px 18px 12px}
+  .vm-title{font-family:var(--disp);font-weight:900;font-size:23px;line-height:1.05}
+  .vm-area{font-family:var(--mono);font-size:10.5px;color:var(--ash);text-transform:uppercase;letter-spacing:.05em;margin-top:3px}
+  .vm-head .ratings{margin-top:7px}
+  .vm-close{margin-left:auto;flex-shrink:0;font-family:var(--mono);font-size:15px;line-height:1;color:var(--ash);
+    background:var(--smoke-2);border:1px solid var(--line);border-radius:50%;width:34px;height:34px;cursor:pointer}
+  .vm-close:hover{color:var(--char);border-color:var(--ash)}
+  .vm-map{position:relative;height:min(420px,52dvh);background:#e4ebf2}
+  .vm-map iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .vm-foot{display:flex;gap:16px;align-items:center;flex-wrap:wrap;padding:13px 18px 15px;font-family:var(--mono);font-size:11.5px}
+  .vm-foot a{color:var(--royal);text-decoration:none;border-bottom:1px solid rgba(13,76,146,.35);padding-bottom:1px;font-weight:700}
+  .vm-note{color:var(--ash-dim);font-size:10.5px;margin-left:auto}
+  @media(max-width:560px){.vm-note{display:none}.vm-map{height:min(340px,48dvh)}}
+
   footer{border-top:1px solid var(--line);padding:36px 0 54px;background:var(--smoke)}
   footer p{font-family:var(--mono);font-size:11.5px;color:var(--ash-dim);line-height:1.7;max-width:78ch}
   footer .s{color:var(--ash);font-weight:700}
@@ -329,10 +354,10 @@
     <div class="rubric" id="rubric"></div>
     <div class="sec-head" style="margin-top:48px"><h2>The verdict</h2></div>
     <div class="verdict">
-      <div class="vc sage"><h3>Best overall &amp; value</h3><div class="big">Morning Star — Tue</div><p><b>300g sirloin, $25.</b> Biggest steak, lowest unit price, Tripadvisor #2 in Williamstown, reviews rate it the best steak night in Willy. Fully venue-confirmed.</p></div>
-      <div class="vc gold"><h3>Premium / date night</h3><div class="big">Sebastian or Porters — Thu</div><p><b>Sebastian</b> charcoal butcher's cut for two ($90), or <b>Porters</b> 200g eye fillet ($29) / 250g scotch ($35).</p></div>
-      <div class="vc"><h3>Reliable locals</h3><div class="big">Stags Head &amp; Junction — Wed</div><p><b>Stags Head</b> (250g sirloin, $25–28 +$5 wine) is closer to home; <b>Junction</b> edges it on the porterhouse but has the odd slow-service note.</p></div>
-      <div class="vc mr"><h3>Cheapest steak found</h3><div class="big">The Rose Hotel — Wed</div><p><b>$20 for a 250g porterhouse</b> — not on the original list and not yet scored, but the lowest price in the area. Tiny review base (Google 4.3 / 23), so it's a punt.</p></div>
+      <div class="vc sage"><h3>Best overall &amp; value</h3><div class="big"><button type="button" class="vlink" data-v="Morning Star">Morning Star</button> — Tue</div><p><b>300g sirloin, $25.</b> Biggest steak, lowest unit price, Tripadvisor #2 in Williamstown, reviews rate it the best steak night in Willy. Fully venue-confirmed.</p></div>
+      <div class="vc gold"><h3>Premium / date night</h3><div class="big"><button type="button" class="vlink" data-v="Sebastian">Sebastian</button> or <button type="button" class="vlink" data-v="Porters">Porters</button> — Thu</div><p><b>Sebastian</b> charcoal butcher's cut for two ($90), or <b>Porters</b> 200g eye fillet ($29) / 250g scotch ($35).</p></div>
+      <div class="vc"><h3>Reliable locals</h3><div class="big"><button type="button" class="vlink" data-v="Stags Head">Stags Head</button> &amp; <button type="button" class="vlink" data-v="Junction">Junction</button> — Wed</div><p><b>Stags Head</b> (250g sirloin, $25–28 +$5 wine) is closer to home; <b>Junction</b> edges it on the porterhouse but has the odd slow-service note.</p></div>
+      <div class="vc mr"><h3>Cheapest steak found</h3><div class="big"><button type="button" class="vlink" data-v="The Rose Hotel">The Rose Hotel</button> — Wed</div><p><b>$20 for a 250g porterhouse</b> — not on the original list and not yet scored, but the lowest price in the area. Tiny review base (Google 4.3 / 23), so it's a punt.</p></div>
     </div>
   </section>
 
@@ -495,6 +520,9 @@ function pressChip(groupSel,b){
   b.classList.add('active');b.setAttribute('aria-pressed','true');
 }
 
+/* venue name → button that opens the Google Maps modal (wired up at the bottom of this script) */
+const vlink=(name,label)=>`<button type="button" class="vlink" data-v="${name}">${label||name}</button>`;
+
 /* counts */
 document.getElementById('vcount').textContent=V.length;
 let specCount=0;V.forEach(v=>DAYS.forEach(d=>{if(v.sp&&v.sp[d])specCount+=v.sp[d].length}));
@@ -527,7 +555,7 @@ function bannerSection(dayKey,label,cls){
   const types=Object.keys(groups).sort((a,b)=>a==='steak'?-1:b==='steak'?1:CAT[a].l.localeCompare(CAT[b].l));
   let h=`<div class="bsection ${cls}"><div class="bhead">${label}</div>`;
   if(!types.length){h+='<div class="bnone">Nothing listed</div>';}
-  else types.forEach(t=>{h+=`<div class="bgroup"><span class="bt">${CAT[t].l}</span><span class="bp">${groups[t].join(', ')}</span></div>`;});
+  else types.forEach(t=>{h+=`<div class="bgroup"><span class="bt">${CAT[t].l}</span><span class="bp">${groups[t].map(n=>vlink(n)).join(', ')}</span></div>`;});
   h+='</div>';
   return h;
 }
@@ -549,7 +577,7 @@ const dk=document.getElementById('dockets');
   const cls=isT?' today':isM?' tomo':'';
   const el=document.createElement('div');el.className='docket'+cls;
   el.innerHTML=`<div class="day"><span>${fullDay[d]}</span>${tag}</div>
-    <div class="pick">${p.p}</div><div class="cut">${p.c}</div>
+    <div class="pick">${vlink(p.p)}</div><div class="cut">${p.c}</div>
     <div class="line"><span class="price">${p.c.split('· ')[1]}</span><span class="sc">${p.s.toFixed(1)}</span></div>
     <div class="alt">${p.a}</div>`;
   dk.appendChild(el);
@@ -582,7 +610,7 @@ function renderAll(){
       h+=`<div class="daysection"><h4>${fullDay[d]}${tag}</h4><div class="inner">`;
       items.forEach(({v,s})=>{
         const m=CAT[s.t];
-        h+=`<div class="dayrow"><span class="em">${m.e}</span><div class="body"><div class="vn">${v.n}<span class="ar">${v.area}</span></div><div class="tx">${s.x}</div></div>${v.g?`<span class="gr-google">★${v.g[0]}</span>`:''}</div>`;
+        h+=`<div class="dayrow"><span class="em">${m.e}</span><div class="body"><div class="vn">${vlink(v.n)}<span class="ar">${v.area}</span></div><div class="tx">${s.x}</div></div>${v.g?`<span class="gr-google">★${v.g[0]}</span>`:''}</div>`;
       });
       h+='</div></div>';
     });
@@ -597,7 +625,7 @@ function renderAll(){
         return `<div class="spec ${s.t==='steak'?'steak':''}"><span class="em">${m.e}</span><span class="txt"><b>${m.l}</b>${s.x}</span></div>`;}).join('');
       const tags=v.tags?v.tags.map(t=>`<span class="tag">${t}</span>`).join(''):'';
       const dir=`https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lng}`;
-      h+=`<div class="vcard"><div class="vh"><div><div class="vn">${v.n}</div><div class="va">${v.area}</div></div></div>
+      h+=`<div class="vcard"><div class="vh"><div><div class="vn">${vlink(v.n)}</div><div class="va">${v.area}</div></div></div>
         <div class="ratings">${ratingsHTML(v)}</div>
         <div class="spec-list">${specs}</div>
         ${v.hh?`<div class="spec"><span class="em">🍹</span><span class="txt"><b>Happy hour</b>${v.hh}</span></div>`:''}
@@ -628,7 +656,7 @@ function renderSteak(){
     const bars=Object.entries(d.s).map(([k,v])=>`<div class="bar-row"><span class="bar-lab">${k}</span><div class="bar-track"><span class="bar-fill ${k==='Value'?'v':''}" style="--v:${v/10}"></span></div><span class="bar-num">${v}</span></div>`).join('');
     row.innerHTML=`<div class="row-head">
       <div class="rank">${String(d.rank).padStart(2,'0')}</div>
-      <div class="pub">${d.n}${d.fnd?' <span class="flag">NEW FIND</span>':''}</div>
+      <div class="pub">${vlink(d.n)}${d.fnd?' <span class="flag">NEW FIND</span>':''}</div>
       <div class="night">${d.nights.join(' & ')}</div>
       <div class="cutcell">${d.cut} <small>· ${d.weight}</small></div>
       <div class="pricecell">${d.price}</div>
@@ -638,7 +666,7 @@ function renderSteak(){
         <dl class="facts"><dt>Cut & weight</dt><dd>${d.cut} · ${d.weight}</dd>
         <dt>Weight validated by</dt><dd>${d.src}</dd><dt>Source date</dt><dd>${d.date}</dd>
         <dt>Reviews</dt><dd>${d.rev}</dd>${d.note?`<dt>Note</dt><dd>${d.note}</dd>`:''}</dl></div></div>`;
-    row.querySelector('.row-head').addEventListener('click',()=>row.classList.toggle('open'));
+    row.querySelector('.row-head').addEventListener('click',e=>{if(e.target.closest('.vlink'))return;row.classList.toggle('open');});
     host.appendChild(row);
   });
 }
@@ -646,7 +674,7 @@ document.getElementById('steakChips').addEventListener('click',e=>{const b=e.tar
   pressChip('#steakChips',b);sNight=b.dataset.night;renderSteak();});
 document.getElementById('sort').addEventListener('change',e=>{sortKey=e.target.value;renderSteak();});
 renderSteak();
-document.getElementById('missBox').innerHTML=`<b>Also found, not yet scored:</b> the <b>Rose Hotel</b> (Wed, $20 / 250g porterhouse — cheapest in the area) and <b>Rose of Australia</b> (Wed steak night) both turned up in reviews but weren't on your original list. <b>Squires Loft</b> is a proper à-la-carte steakhouse if you want steak any night without a special.`;
+document.getElementById('missBox').innerHTML=`<b>Also found, not yet scored:</b> the <b>${vlink('The Rose Hotel','Rose Hotel')}</b> (Wed, $20 / 250g porterhouse — cheapest in the area) and <b>${vlink('Rose of Australia')}</b> (Wed steak night) both turned up in reviews but weren't on your original list. <b>${vlink('Squires Loft')}</b> is a proper à-la-carte steakhouse if you want steak any night without a special.`;
 
 /* rubric */
 [["30%","Value for money","Price vs portion and cut — $/100g and inclusions."],
@@ -679,7 +707,7 @@ function popHTML(v){
   const rest=restDays.map(d=>v.sp[d].map(s=>`<div><span class="d">${d}</span> ${CAT[s.t].e} ${s.x}</div>`).join('')).join('');
   let r='';if(v.g)r+=`G <b>${v.g[0]}</b> (${v.g[1]})`;if(v.ta)r+=` · TA <b>${v.ta}</b>`;if(v.rg)r+=` · RG <b>${v.rg}</b>`;
   const dir=`https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lng}`;
-  return `<div class="pop"><div class="pn">${v.n}</div><div class="pa">${v.area}</div>
+  return `<div class="pop"><div class="pn">${vlink(v.n)}</div><div class="pa">${v.area}</div>
     <div class="pr">${r}</div>
     <div class="poptt"><b>Today · ${fullDay[TODAY]}</b>${line(today)}</div>
     <div class="poptt tomo"><b>Tomorrow · ${fullDay[TOMO]}</b>${line(tomo)}</div>
@@ -711,7 +739,7 @@ function renderMapFallback(reason){
     const line=arr=>arr.length?arr.map(s=>`${CAT[s.t].e} ${s.x}`).join('<br>'):'<span style="color:var(--ash-dim)">nothing listed</span>';
     const dir=`https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lng}`;
     let r='';if(v.g)r+=`G <b>${v.g[0]}</b> (${v.g[1]})`;if(v.ta)r+=` · TA <b>${v.ta}</b>`;
-    h+=`<div class="vcard"><div class="vh"><div><div class="vn">${v.n}</div><div class="va">${v.area}</div></div></div>
+    h+=`<div class="vcard"><div class="vh"><div><div class="vn">${vlink(v.n)}</div><div class="va">${v.area}</div></div></div>
       <div class="ratings"><span class="rb">${r}</span></div>
       <div class="spec-list">
         <div class="spec"><span class="em">📍</span><span class="txt"><b>Today</b>${line(today)}</span></div>
@@ -754,6 +782,60 @@ document.getElementById('mapRecheck').addEventListener('click',()=>{
   if(map){map.remove();map=null;}
   mapBuilt=false;
   setTimeout(buildMap,150);
+});
+
+/* ---------- VENUE MODAL — live Google Maps embed, nothing stored locally ----------
+   The keyless embed endpoint shows the place card (name, rating, address) pinned on a
+   real map; Google blocks iframing its full place page, so menu / reviews / photos
+   open via the "Full details" deep link instead — all pulled live from Google. */
+const gmQ=v=>encodeURIComponent(`${v.n.replace(/\s*\(.*?\)/,'')}, ${v.area.replace(' Beach','')} VIC, Australia`);
+const vm=document.createElement('div');
+vm.className='vmodal';vm.setAttribute('role','dialog');vm.setAttribute('aria-modal','true');vm.setAttribute('aria-labelledby','vmTitle');
+vm.innerHTML=`<div class="backdrop" data-close></div>
+  <div class="vm-card">
+    <div class="vm-head">
+      <div><div class="vm-title" id="vmTitle"></div><div class="vm-area"></div><div class="ratings vm-ratings"></div></div>
+      <button type="button" class="vm-close" data-close aria-label="Close venue details">✕</button>
+    </div>
+    <div class="vm-map"><iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></div>
+    <div class="vm-foot">
+      <a class="vm-open" target="_blank" rel="noopener">Full details on Google Maps →</a>
+      <a class="vm-dir" target="_blank" rel="noopener">Directions →</a>
+      <span class="vm-note">Menu, reviews &amp; photos live on Google Maps</span>
+    </div>
+  </div>`;
+document.body.appendChild(vm);
+let vmReturnFocus=null;
+function openVenue(name){
+  const v=V.find(x=>x.n===name);if(!v)return;
+  vmReturnFocus=document.activeElement;
+  const q=gmQ(v);
+  vm.querySelector('.vm-title').textContent=v.n;
+  vm.querySelector('.vm-area').textContent=v.area;
+  vm.querySelector('.vm-ratings').innerHTML=ratingsHTML(v);
+  const fr=vm.querySelector('iframe');
+  fr.title=`Google Maps — ${v.n}`;
+  fr.src=`https://maps.google.com/maps?q=${q}&z=16&hl=en&output=embed`;
+  vm.querySelector('.vm-open').href=`https://www.google.com/maps/search/?api=1&query=${q}`;
+  vm.querySelector('.vm-dir').href=`https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lng}`;
+  vm.classList.add('open');document.body.style.overflow='hidden';
+  vm.querySelector('.vm-close').focus();
+}
+function closeVenue(){
+  vm.classList.remove('open');
+  vm.querySelector('iframe').src='about:blank';
+  document.body.style.overflow='';
+  if(vmReturnFocus&&document.contains(vmReturnFocus))vmReturnFocus.focus();
+}
+document.addEventListener('click',e=>{const b=e.target.closest('.vlink');if(b)openVenue(b.dataset.v);});
+vm.addEventListener('click',e=>{if(e.target.closest('[data-close]'))closeVenue();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&vm.classList.contains('open'))closeVenue();});
+vm.addEventListener('keydown',e=>{
+  if(e.key!=='Tab')return;
+  const f=vm.querySelectorAll('button,a[href],iframe');
+  const first=f[0],last=f[f.length-1];
+  if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
 });
 </script>
 </body>
